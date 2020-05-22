@@ -981,12 +981,12 @@ class SensemeFan(SensemeDevice):
     def motion_fan_auto(self, state: bool):
         """Set the fan automatic on with motion mode."""
         state = "ON" if state else "OFF"
-        self._send_command(f";FAN;AUTO;{state}")
+        self._send_command(f"FAN;AUTO;{state}")
 
     @property
     def motion_light_auto(self) -> bool:
         """Return True when light is in automatic on with motion mode."""
-        state = self._data.get(";LIGHT;AUTO", None)
+        state = self._data.get("LIGHT;AUTO", None)
         if state:
             return state == "ON"
         return None
@@ -995,7 +995,7 @@ class SensemeFan(SensemeDevice):
     def motion_light_auto(self, state: bool):
         """Set the light automatic on with motion mode."""
         state = "ON" if state else "OFF"
-        self._send_command(f";LIGHT;AUTO;{state}")
+        self._send_command(f"LIGHT;AUTO;{state}")
 
 
 class SensemeLight(SensemeDevice):
@@ -1057,3 +1057,17 @@ class SensemeLight(SensemeDevice):
         if max_color_temp:
             return int(max_color_temp)
         return None
+
+    @property
+    def motion_light_auto(self) -> bool:
+        """Return True when light is in automatic on with motion mode."""
+        state = self._data.get("LIGHT;AUTO", None)
+        if state:
+            return state == "ON"
+        return None
+
+    @motion_light_auto.setter
+    def motion_light_auto(self, state: bool):
+        """Set the light automatic on with motion mode."""
+        state = "ON" if state else "OFF"
+        self._send_command(f"LIGHT;AUTO;{state}")
