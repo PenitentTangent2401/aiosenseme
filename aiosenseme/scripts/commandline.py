@@ -115,6 +115,22 @@ ARGS.add_argument(
     choices=["on", "off"],
     help="fan whoosh mode",
 )
+ARGS.add_argument(
+    "--autolight",
+    action="store",
+    dest="autolight",
+    default=None,
+    choices=["on", "off"],
+    help="motion auto light mode",
+)
+ARGS.add_argument(
+    "--autofan",
+    action="store",
+    dest="autofan",
+    default=None,
+    choices=["on", "off"],
+    help="motion auto fan mode",
+)
 
 # array of discovered devices
 _DEVICES = []
@@ -147,20 +163,44 @@ def print_state(prefix: str, device: SensemeDevice):
         if device.fan_on:
             msg += f": Fan is on (speed: {device.fan_speed}"
             if device.fan_whoosh:
-                msg += ", whoosh: on)"
+                msg += ", whoosh: on"
             else:
-                msg += ", whoosh: off)"
+                msg += ", whoosh: off"
+            if device.motion_fan_auto:
+                msg += ", motion_auto: on)"
+            else:
+                msg += ", motion_auto: off)"
         else:
-            msg += ": Fan is off"
+            msg += ": Fan is off ("
+            if device.motion_fan_auto:
+                msg += "motion_auto: on)"
+            else:
+                msg += "motion_auto: off)"
         if device.light_on:
-            msg += f", Light is on (brightness: {device.light_brightness})"
+            msg += f", Light is on (brightness: {device.light_brightness}"
+            if device.motion_light_auto:
+                msg += ", motion_auto: on)"
+            else:
+                msg += ", motion_auto: off)"
         else:
-            msg += ", Light is off"
+            msg += ", Light is off ("
+            if device.motion_light_auto:
+                msg += "motion_auto: on)"
+            else:
+                msg += "motion_auto: off)"
     elif device.is_light:
         if device.light_on:
-            msg += f": Light is on (brightness: {device.light_brightness}, color temp: {device.light_color_temp})"
+            msg += f": Light is on (brightness: {device.light_brightness}, color temp: {device.light_color_temp}"
+            if device.motion_light_auto:
+                msg += ", motion_auto: on)"
+            else:
+                msg += ", motion_auto: off)"
         else:
-            msg += ": Light is off"
+            msg += ": Light is off ("
+            if device.motion_light_auto:
+                msg += "motion_auto: on)"
+            else:
+                msg += "motion_auto: off)"
     else:
         msg += ": Unknown SenseME device"
     print(msg)
@@ -253,6 +293,10 @@ async def process_args():
                 if device.fan_on != (args.fan == "on"):
                     changed = True
                 device.fan_on = args.fan == "on"
+            if args.autofan is not None:
+                if device.motion_fan_auto != (args.autofan == "on"):
+                    changed = True
+                device.motion_fan_auto = args.autofan == "on"
             if device.has_light:
                 if args.colortemp is not None:
                     print("Fan lights do not have adjustable color temperature")
@@ -269,11 +313,16 @@ async def process_args():
                     if device.light_on != (args.light == "on"):
                         changed = True
                     device.light_on = args.light == "on"
+                if args.autolight is not None:
+                    if device.motion_light_auto != (args.autolight == "on"):
+                        changed = True
+                    device.motion_light_auto = args.autofan == "on"
             else:
                 if (
                     args.brightness is not None
                     or args.light is not None
                     or args.colortemp is not None
+                    or args.autolight is not None
                 ):
                     print("Fan does not have a light to adjust")
         else:
@@ -294,6 +343,10 @@ async def process_args():
                 if device.light_color_temp != args.colortemp:
                     changed = True
                 device.light_color_temp = args.colortemp
+            if args.autolight is not None:
+                if device.motion_light_auto != (args.autolight == "on"):
+                    changed = True
+                device.motion_light_auto = args.autolight == "on"
         if changed:
             await asyncio.sleep(0.5)
             print_state("New State", device)
